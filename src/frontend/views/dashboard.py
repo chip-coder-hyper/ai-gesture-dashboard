@@ -3,7 +3,7 @@ from streamlit_webrtc import webrtc_streamer
 from streamlit_autorefresh import st_autorefresh
 
 from utils.api_client import upload_file, send_chat_message
-# Import Class xử lý camera từ file mới tách
+# Import Class xử lý camera đã được tách luồng an toàn
 from utils.camera_processor import HandGestureProcessor
 
 def render_main_dashboard():
@@ -82,22 +82,21 @@ def render_main_dashboard():
             webrtc_ctx = webrtc_streamer(
                 key="gesture-camera",
                 video_processor_factory=HandGestureProcessor,
-                # === ĐÂY LÀ ĐOẠN CẦN THAY THẾ CHÍNH XÁC ===
                 rtc_configuration={
                     "iceServers": [
                         {"urls": ["stun:stun.l.google.com:19302"]},
                         {
                             "urls": [
-                                "turn:openrelay.metered.ca:80",
-                                "turn:openrelay.metered.ca:443",
-                                "turn:openrelay.metered.ca:443?transport=tcp"
+                                "turn:hailong-camera.metered.live:80",
+                                "turn:hailong-camera.metered.live:443",
+                                "turn:hailong-camera.metered.live:443?transport=tcp"
                             ],
-                            "username": "openrelayproject",
-                            "credential": "openrelayproject"
+                            "username": "8a5fc00acaa2fe2acabb16de",
+                            "credential": "InnMps/D+hwwUWN5"
                         }
-                    ]
+                    ],
+                    "iceTransportPolicy": "relay"
                 },
-                # ==========================================
             )
             
             if webrtc_ctx.state.playing:
