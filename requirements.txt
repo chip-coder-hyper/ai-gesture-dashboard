@@ -21,6 +21,9 @@ google-generativeai
 langchain
 langchain-google-genai
 langchain-community
+langchain-chroma
+langchain-huggingface
+sentence-transformers
 pypdf
 docx2txt
 
@@ -29,9 +32,6 @@ streamlit
 streamlit-webrtc
 streamlit-autorefresh
 opencv-python-headless
+opencv-contrib-python-headless
 mediapipe
 av
-
-langchain-chroma
-langchain-huggingface
-sentence-transformers
