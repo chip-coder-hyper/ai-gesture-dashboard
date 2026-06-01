@@ -97,6 +97,14 @@ def render_main_dashboard():
                     ],
                     "iceTransportPolicy": "relay"
                 },
+                # Cắt đuôi cái mic phiền phức, chỉ lấy hình
+                media_stream_constraints={"video": True, "audio": False},
+                # Tối ưu hiển thị, tránh bị chặn luồng
+                video_html_attrs={
+                    "autoPlay": True, 
+                    "controls": False, 
+                    "playsInline": True
+                }
             )
             
             if webrtc_ctx.state.playing:
