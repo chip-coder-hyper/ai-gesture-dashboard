@@ -1,9 +1,10 @@
 [phases.setup]
-nixPkgs = [
-    "glib",
-    "xorg.libSM",
-    "xorg.libXext",
-    "xorg.libXrender",
-    "xorg.libxcb",
-    "libGL"
+aptPkgs = [
+    "libgl1-mesa-glx",
+    "libglib2.0-0",
+    "libsm6",
+    "libxext6",
+    "libxrender-dev",
+    "libxcb1",
+    "libxkbcommon-x11-0"
 ]
