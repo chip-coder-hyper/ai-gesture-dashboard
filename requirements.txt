@@ -31,3 +31,5 @@ streamlit-autorefresh
 opencv-python-headless
 mediapipe
 av
+
+langchain-chroma
