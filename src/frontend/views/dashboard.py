@@ -82,35 +82,16 @@ def render_main_dashboard():
             webrtc_ctx = webrtc_streamer(
                 key="gesture-camera",
                 video_processor_factory=HandGestureProcessor,
-                rtc_configuration={
-                    "iceServers": [
-                        # STUN dự phòng cho các mạng dễ dãi
-                        {"urls": ["stun:stun.l.google.com:19302"]},
-                        {
-                            "urls": [
-                                # 1. ƯU TIÊN SỐ 1: TURN over TLS (Bọc thép mã hóa, đâm thủng Antivirus/Firewall)
-                                "turns:hailong-camera.metered.live:443?transport=tcp",
-                                # 2. Dự phòng 2: TURN TCP thường
-                                "turn:hailong-camera.metered.live:443?transport=tcp",
-                                # 3. Dự phòng 3: TURN UDP (Cho mạng nhà)
-                                "turn:hailong-camera.metered.live:80"
-                            ],
-                            "username": "8a5fc00acaa2fe2acabb16de",
-                            "credential": "InnMps/D+hwwUWN5"
-                        }
-                    ],
-                    # ÉP buộc phải đi qua đường hầm mã hóa của bạn
-                    "iceTransportPolicy": "relay"
-                },
-                # Cấm ngặt quyền Audio để tránh treo
+                # KHÔNG STUN, KHÔNG TURN, KHÔNG rtc_configuration GÌ CẢ
                 media_stream_constraints={"video": True, "audio": False},
-                # Bùa chú mới: Tối ưu băng thông cho Streamlit WebRTC
-                async_processing=True,
                 video_html_attrs={
                     "autoPlay": True, 
                     "controls": False, 
                     "playsInline": True
-                }
+                },
+                # BÙA CHÚ CỨU MẠNG: Buộc nó truyền qua luồng chính của Streamlit
+                sendback_audio=False,
+                async_processing=True
             )
             
             if webrtc_ctx.state.playing:
