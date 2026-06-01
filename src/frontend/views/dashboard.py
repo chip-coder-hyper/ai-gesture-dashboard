@@ -82,7 +82,22 @@ def render_main_dashboard():
             webrtc_ctx = webrtc_streamer(
                 key="gesture-camera",
                 video_processor_factory=HandGestureProcessor,
-                rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}, {"urls": ["stun:stun1.l.google.com:19302"]}]},
+                # === ĐÂY LÀ ĐOẠN CẦN THAY THẾ CHÍNH XÁC ===
+                rtc_configuration={
+                    "iceServers": [
+                        {"urls": ["stun:stun.l.google.com:19302"]},
+                        {
+                            "urls": [
+                                "turn:openrelay.metered.ca:80",
+                                "turn:openrelay.metered.ca:443",
+                                "turn:openrelay.metered.ca:443?transport=tcp"
+                            ],
+                            "username": "openrelayproject",
+                            "credential": "openrelayproject"
+                        }
+                    ]
+                },
+                # ==========================================
             )
             
             if webrtc_ctx.state.playing:
