@@ -1,22 +1,27 @@
 import cv2
 import av
 import time
-# Import đích danh để tránh lỗi AttributeError trên server
-from mediapipe.python.solutions import hands, drawing_utils
+import mediapipe as mp # Quay lại cách gọi chuẩn của MediaPipe
 from streamlit_webrtc import VideoTransformerBase
 
 class HandGestureProcessor(VideoTransformerBase):
     def __init__(self):
-        # KHÔNG khởi tạo MediaPipe ở đây, luồng chính và luồng Camera sẽ đá nhau
+        # KHAI BÁO RỖNG: Tuyệt đối chưa gọi mp.solutions ở đây để tránh lỗi luồng (AttributeError)
         self.hands_detector = None
+        self.mp_hands = None
+        self.mp_draw = None
+        
         self.current_fingers = 0
         self.hold_start_time = 0
         self.confirmed_command = None
 
     def recv(self, frame):
-        # Chỉ khởi tạo khi luồng Camera thực sự đã mở (Lazy Init)
+        # LAZY INIT: Chỉ gọi và khởi tạo MediaPipe khi luồng Camera thực sự đã bật
         if self.hands_detector is None:
-            self.hands_detector = hands.Hands(
+            self.mp_hands = mp.solutions.hands
+            self.mp_draw = mp.solutions.drawing_utils
+            
+            self.hands_detector = self.mp_hands.Hands(
                 static_image_mode=False,
                 max_num_hands=1, 
                 model_complexity=0, 
@@ -34,7 +39,7 @@ class HandGestureProcessor(VideoTransformerBase):
             
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
-                    drawing_utils.draw_landmarks(img, hand_landmarks, hands.HAND_CONNECTIONS)
+                    self.mp_draw.draw_landmarks(img, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
                     lm = hand_landmarks.landmark
                     if lm[8].y < lm[6].y: fingers += 1   
                     if lm[12].y < lm[10].y: fingers += 1 
