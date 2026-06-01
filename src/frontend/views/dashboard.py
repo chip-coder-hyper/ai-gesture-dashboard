@@ -1,77 +1,11 @@
 import streamlit as st
-import cv2
-import mediapipe as mp
-import av
-import time
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_webrtc import webrtc_streamer
 from streamlit_autorefresh import st_autorefresh
 
-from utils.api_client import upload_file, send_chat_message, get_chat_sessions, get_session_messages
+from utils.api_client import upload_file, send_chat_message
+# Import Class xử lý camera từ file mới tách
+from utils.camera_processor import HandGestureProcessor
 
-# ==========================================
-# LÕI XỬ LÝ CAMERA 
-# ==========================================
-class HandGestureProcessor(VideoTransformerBase):
-    def __init__(self):
-        self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=1, 
-            model_complexity=0, 
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
-        )
-        self.mp_draw = mp.solutions.drawing_utils
-        self.current_fingers = 0
-        self.hold_start_time = 0
-        self.confirmed_command = None
-
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        img = cv2.flip(img, 1) 
-        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        try:
-            results = self.hands.process(rgb)
-            fingers = 0
-            
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    self.mp_draw.draw_landmarks(img, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
-                    lm = hand_landmarks.landmark
-                    if lm[8].y < lm[6].y: fingers += 1   
-                    if lm[12].y < lm[10].y: fingers += 1 
-                    if lm[16].y < lm[14].y: fingers += 1 
-                    if lm[20].y < lm[18].y: fingers += 1 
-
-            if fingers > 0:
-                if fingers == self.current_fingers:
-                    if self.hold_start_time == 0:
-                        self.hold_start_time = time.time()
-                        
-                    elapsed = time.time() - self.hold_start_time
-                    if elapsed >= 2.0:
-                        self.confirmed_command = fingers
-                        cv2.putText(img, "DA CHOT LENH!", (20, 120), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 0, 255), 3)
-                    else:
-                        progress = int((elapsed / 2.0) * 100)
-                        cv2.putText(img, f"Giu nguyen... {progress}%", (20, 120), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 255, 255), 2)
-                else:
-                    self.current_fingers = fingers
-                    self.hold_start_time = time.time()
-            else:
-                self.current_fingers = 0
-                self.hold_start_time = 0
-
-            cv2.putText(img, f"So ngon tay: {fingers}", (20, 60), cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 255, 0), 3)
-        except Exception:
-            pass 
-
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
-
-# ==========================================
-# GIAO DIỆN CHÍNH
-# ==========================================
 def render_main_dashboard():
     if "current_page" not in st.session_state: 
         st.session_state.current_page = "chat"
@@ -104,11 +38,8 @@ def render_main_dashboard():
                         st.rerun()
             return 
 
-        # TẠO KHUNG CUỘN (SCROLL) TÀNG HÌNH CHO ĐOẠN CHAT
-        # border=False giúp xóa bỏ cái khung vuông vức xấu xí!
         chat_scroll_box = st.container(height=600, border=False)
 
-        # Mọi tin nhắn sẽ được nhét vào trong cái hộp cuộn này
         with chat_scroll_box:
             for msg in st.session_state.messages:
                 with st.chat_message(msg["role"]): 
@@ -122,7 +53,6 @@ def render_main_dashboard():
                         st.session_state.pending_question = q
                         st.rerun()
 
-        # Ô nhập liệu tự ghim xuống đáy màn hình
         user_input = st.chat_input("Hỏi bất kỳ điều gì...")
         
         if user_input or st.session_state.pending_question:
@@ -131,7 +61,6 @@ def render_main_dashboard():
             
             st.session_state.messages.append({"role": "user", "content": q})
             
-            # Đẩy tin nhắn mới vào thẳng trong hộp cuộn
             with chat_scroll_box:
                 with st.chat_message("user"): 
                     st.markdown(q)
