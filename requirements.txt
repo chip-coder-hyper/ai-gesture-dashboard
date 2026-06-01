@@ -33,3 +33,5 @@ mediapipe
 av
 
 langchain-chroma
+langchain-huggingface
+sentence-transformers
