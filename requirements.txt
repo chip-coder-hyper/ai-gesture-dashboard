@@ -1,17 +1,33 @@
+# --- Lõi Backend & Cấu hình ---
 fastapi
 uvicorn
-sqlalchemy
 pydantic
+pydantic-settings
 python-multipart
+python-dotenv
+requests
+
+# --- Bảo mật & Xác thực ---
+bcrypt
+python-jose[cryptography]
+passlib[bcrypt]
+
+# --- Database & Vector DB ---
+sqlalchemy
+chromadb
+
+# --- AI, LLM & Xử lý tài liệu ---
 google-generativeai
 langchain
 langchain-google-genai
+langchain-community
+pypdf
+docx2txt
+
+# --- Frontend & Xử lý Camera ---
 streamlit
 streamlit-webrtc
 streamlit-autorefresh
 opencv-python-headless
 mediapipe
 av
-requests
-bcrypt
-python-jose[cryptography]
