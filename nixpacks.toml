@@ -1,12 +1,10 @@
 [phases.setup]
 aptPkgs = [
     "libgl1",
-    "libglib2.0-0"
-]
-
-[phases.build]
-dependsOn = ["install"]
-cmds = [
-    "pip uninstall -y opencv-python opencv-contrib-python",
-    "pip install opencv-python-headless"
+    "libglib2.0-0",
+    "libsm6",
+    "libxext6",
+    "libxrender1",
+    "libxcb1",
+    "libxkbcommon-x11-0"
 ]
