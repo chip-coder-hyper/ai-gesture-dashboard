@@ -82,7 +82,11 @@ def render_main_dashboard():
             webrtc_ctx = webrtc_streamer(
                 key="gesture-camera",
                 video_processor_factory=HandGestureProcessor,
-                # KHÔNG STUN, KHÔNG TURN, KHÔNG rtc_configuration GÌ CẢ
+                rtc_configuration={
+                    "iceServers": [
+                        {"urls": ["stun:stun.l.google.com:19302"]}
+                    ]
+                },
                 media_stream_constraints={"video": True, "audio": False},
                 video_html_attrs={
                     "autoPlay": True, 
