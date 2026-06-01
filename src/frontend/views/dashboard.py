@@ -84,22 +84,28 @@ def render_main_dashboard():
                 video_processor_factory=HandGestureProcessor,
                 rtc_configuration={
                     "iceServers": [
+                        # STUN dự phòng cho các mạng dễ dãi
                         {"urls": ["stun:stun.l.google.com:19302"]},
                         {
                             "urls": [
-                                "turn:hailong-camera.metered.live:80",
-                                "turn:hailong-camera.metered.live:443",
-                                "turn:hailong-camera.metered.live:443?transport=tcp"
+                                # 1. ƯU TIÊN SỐ 1: TURN over TLS (Bọc thép mã hóa, đâm thủng Antivirus/Firewall)
+                                "turns:hailong-camera.metered.live:443?transport=tcp",
+                                # 2. Dự phòng 2: TURN TCP thường
+                                "turn:hailong-camera.metered.live:443?transport=tcp",
+                                # 3. Dự phòng 3: TURN UDP (Cho mạng nhà)
+                                "turn:hailong-camera.metered.live:80"
                             ],
                             "username": "8a5fc00acaa2fe2acabb16de",
                             "credential": "InnMps/D+hwwUWN5"
                         }
                     ],
+                    # ÉP buộc phải đi qua đường hầm mã hóa của bạn
                     "iceTransportPolicy": "relay"
                 },
-                # Cắt đuôi cái mic phiền phức, chỉ lấy hình
+                # Cấm ngặt quyền Audio để tránh treo
                 media_stream_constraints={"video": True, "audio": False},
-                # Tối ưu hiển thị, tránh bị chặn luồng
+                # Bùa chú mới: Tối ưu băng thông cho Streamlit WebRTC
+                async_processing=True,
                 video_html_attrs={
                     "autoPlay": True, 
                     "controls": False, 
