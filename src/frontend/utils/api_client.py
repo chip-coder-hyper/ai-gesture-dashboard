@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 BASE_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # --- 1. ĐĂNG NHẬP VÀ TẠO TÀI KHOẢN ---
-def register_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+def register_user(email: str, password: str) -> Dict[str, Any]:
     """Đăng ký một người dùng mới với email và password."""
     try:
         response = requests.post(
@@ -17,10 +17,10 @@ def register_user(email: str, password: str) -> Optional[Dict[str, Any]]:
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error during registration: {e}")
-        return None
+        print(f"[Error] Registration failed: {e}")
+        return {"status": "error", "message": "Could not connect to backend during registration."}
 
-def login_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+def login_user(email: str, password: str) -> Dict[str, Any]:
     """Đăng nhập người dùng với email và password."""
     try:
         response = requests.post(
@@ -30,9 +30,8 @@ def login_user(email: str, password: str) -> Optional[Dict[str, Any]]:
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error during login: {e}")
-        return None
-
+        print(f"[Error] Login failed: {e}")
+        return {"status": "error", "message": "Could not connect to backend during login."}
 # --- 2. QUẢN LÝ TÀI LIỆU --
 def upload_document(token: str, file_path: str) -> Optional[Dict[str, Any]]:
     """Tải lên một tài liệu với token xác thực."""
