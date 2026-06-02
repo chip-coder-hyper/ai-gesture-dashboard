@@ -85,6 +85,18 @@ def get_questions_from_model(token: str, document_id: str) -> Optional[Dict[str,
         print(f"Error getting questions from model: {e}")
         return None
 
+# --- 5. ALIAS CHO UPLOAD FILE ---
+def upload_file(token: str, file_path: str) -> Optional[Dict[str, Any]]:
+    """Alias của upload_document để tương thích ngược."""
+    return upload_document(token, file_path)
+
+# --- 6. GỬI TIN NHẮN CHAT ---
+def send_chat_message(token: str, message: str, chat_history: List[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
+    """Wrapper để gửi tin nhắn chat, tương thích với dashboard.py"""
+    if chat_history is None:
+        chat_history = []
+    return chat_with_model(token, message, chat_history)
+
 # --- 7. GỬI CẤU HÌNH VÀ TÍN HIỆU CỬ CHỈ ---
 def send_gesture_command(gesture_id: int, token: str):
     """Gửi tín hiệu cử chỉ tay về backend."""
