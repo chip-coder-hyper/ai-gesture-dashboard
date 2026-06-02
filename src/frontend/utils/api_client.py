@@ -7,22 +7,26 @@ from typing import Any, Dict, List, Optional
 BASE_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # --- 1. ĐĂNG NHẬP VÀ TẠO TÀI KHOẢN ---
-def register_user(username: str) -> Optional[Dict[str, Any]]:
-    """Đăng ký một người dùng mới với username cung cấp."""
+def register_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+    """Đăng ký một người dùng mới với email và password."""
     try:
         response = requests.post(
-            f"{BASE_URL}/auth/register", json={"username": username}
+            f"{BASE_URL}/auth/register", 
+            json={"email": email, "password": password}
         )
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error during registration: {e}")
         return None
 
-def login_user(username: str) -> Optional[Dict[str, Any]]:
-    """Đăng nhập người dùng với username cung cấp."""
+def login_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+    """Đăng nhập người dùng với email và password."""
     try:
-        response = requests.post(f"{BASE_URL}/auth/login", json={"username": username})
+        response = requests.post(
+            f"{BASE_URL}/auth/login", 
+            json={"email": email, "password": password}
+        )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
