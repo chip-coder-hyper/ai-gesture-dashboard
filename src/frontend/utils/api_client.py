@@ -1,3 +1,4 @@
+
 import json
 import os
 import requests
@@ -7,31 +8,28 @@ from typing import Any, Dict, List, Optional
 BASE_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # --- 1. ĐĂNG NHẬP VÀ TẠO TÀI KHOẢN ---
-def register_user(email: str, password: str) -> Dict[str, Any]:
-    """Đăng ký một người dùng mới với email và password."""
+def register_user(username: str) -> Optional[Dict[str, Any]]:
+    """Đăng ký một người dùng mới với username cung cấp."""
     try:
         response = requests.post(
-            f"{BASE_URL}/auth/register", 
-            json={"email": email, "password": password}
+            f"{BASE_URL}/auth/register", json={"username": username}
         )
-        response.raise_for_status()
+        response.raise_for_status()  # Raise an exception for bad status codes
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"[Error] Registration failed: {e}")
-        return {"status": "error", "message": "Could not connect to backend during registration."}
+        print(f"Error during registration: {e}")
+        return None
 
-def login_user(email: str, password: str) -> Dict[str, Any]:
-    """Đăng nhập người dùng với email và password."""
+def login_user(username: str) -> Optional[Dict[str, Any]]:
+    """Đăng nhập người dùng với username cung cấp."""
     try:
-        response = requests.post(
-            f"{BASE_URL}/auth/login", 
-            json={"email": email, "password": password}
-        )
+        response = requests.post(f"{BASE_URL}/auth/login", json={"username": username})
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"[Error] Login failed: {e}")
-        return {"status": "error", "message": "Could not connect to backend during login."}
+        print(f"Error during login: {e}")
+        return None
+
 # --- 2. QUẢN LÝ TÀI LIỆU --
 def upload_document(token: str, file_path: str) -> Optional[Dict[str, Any]]:
     """Tải lên một tài liệu với token xác thực."""
@@ -88,19 +86,29 @@ def get_questions_from_model(token: str, document_id: str) -> Optional[Dict[str,
         print(f"Error getting questions from model: {e}")
         return None
 
-# --- 5. ALIAS CHO UPLOAD FILE ---
-def upload_file(token: str, file_path: str) -> Optional[Dict[str, Any]]:
-    """Alias của upload_document để tương thích ngược."""
-    return upload_document(token, file_path)
+# --- 5. LẤY THÔNG TIN ICE SERVERS (CHO WEBRTC) ---
+# Hàm này dùng để lấy ICE servers từ API của Metered.ca (sử dụng khi cần cấu hình động)
+# def get_ice_servers(api_key: str) -> Optional[List[Dict[str, Any]]]:
+#     """Lấy ICE servers từ Metered.ca API."""
+#     try:
+#         response = requests.get(f"https://hailong-camera.metered.live/api/v1/turn/credentials?apiKey={api_key}")
+#         response.raise_for_status()
+#         return response.json()
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error getting ICE servers: {e}")
+#         return None
 
-# --- 6. GỬI TIN NHẮN CHAT ---
-def send_chat_message(token: str, message: str, chat_history: List[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
-    """Wrapper để gửi tin nhắn chat, tương thích với dashboard.py"""
-    if chat_history is None:
-        chat_history = []
-    return chat_with_model(token, message, chat_history)
+# --- 6. GỬI CẤU HÌNH WEBRTC (Nếu cần cấu hình động) ---
+# Hàm này dùng để gọi API lấy ICE servers và thiết lập RTCPeerConnection (cần hoàn thiện thêm)
+# def configure_webrtc(api_key: str) -> Optional[Dict[str, Any]]:
+#     ice_servers = get_ice_servers(api_key)
+#     if ice_servers:
+#         # Logic để tạo RTCPeerConnection với ice_servers đã lấy
+#         # Hiện tại chưa có implementation chi tiết cho phần này
+#         return {"iceServers": ice_servers} 
+#     return None
 
-# --- 7. GỬI CẤU HÌNH VÀ TÍN HIỆU CỬ CHỈ ---
+# --- 7. GỌI API GỬI TÍN HIỆU CỬ CHỈ ---
 def send_gesture_command(gesture_id: int, token: str):
     """Gửi tín hiệu cử chỉ tay về backend."""
     headers = {
@@ -115,6 +123,7 @@ def send_gesture_command(gesture_id: int, token: str):
             json=payload, 
             headers=headers
         )
+        # Chỉ trả về dữ liệu nếu request thành công (status code 200)
         if response.status_code == 200:
             return response.json()
         else:
@@ -123,3 +132,9 @@ def send_gesture_command(gesture_id: int, token: str):
     except requests.exceptions.RequestException as e:
         print(f"Network error sending gesture command: {e}")
         return None
+
+# Import các module khác (đặt ở cuối để tránh circular import)
+# from frontend.views.dashboard import render_dashboard
+# from frontend.utils.camera_processor import HandGestureProcessor
+
+
