@@ -84,8 +84,13 @@ def render_main_dashboard():
                 video_processor_factory=HandGestureProcessor,
                 rtc_configuration={
                     "iceServers": [
-                        {"urls": ["stun:stun.l.google.com:19302"]}
-                    ]
+                        {"urls": "stun:stun.relay.metered.ca:80"},
+                        {"urls": "turn:global.relay.metered.ca:80", "username": "8a5fc00acaa2fe2acabb16de", "credential": "InnMps/D+hwwUWN5"},
+                        {"urls": "turn:global.relay.metered.ca:80?transport=tcp", "username": "8a5fc00acaa2fe2acabb16de", "credential": "InnMps/D+hwwUWN5"},
+                        {"urls": "turn:global.relay.metered.ca:443", "username": "8a5fc00acaa2fe2acabb16de", "credential": "InnMps/D+hwwUWN5"},
+                        {"urls": "turns:global.relay.metered.ca:443?transport=tcp", "username": "8a5fc00acaa2fe2acabb16de", "credential": "InnMps/D+hwwUWN5"}
+                    ],
+                    "iceTransportPolicy": "relay"
                 },
                 media_stream_constraints={"video": True, "audio": False},
                 video_html_attrs={
