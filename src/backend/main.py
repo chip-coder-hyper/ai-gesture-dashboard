@@ -29,9 +29,6 @@ app.add_middleware(
 )
 
 
-# =========================================================
-# ROUTERS
-# =========================================================
 app.include_router(
     auth_router,
     prefix="/api/v1/auth",
@@ -51,9 +48,6 @@ app.include_router(
 )
 
 
-# =========================================================
-# SYSTEM HEALTH
-# =========================================================
 @app.get("/", tags=["System Health"])
 async def health_check():
     return {
@@ -77,13 +71,11 @@ async def api_health():
     }
 
 
-# =========================================================
-# AI TESTING
-# =========================================================
 @app.get("/test-ai", tags=["AI Core Testing"])
 async def test_ai():
     try:
         api_key = settings.GEMINI_API_KEY
+
         llm = LLMFactory.get_llm(
             provider_name="gemini",
             api_key=api_key,
@@ -126,9 +118,6 @@ async def list_models():
         }
 
 
-# =========================================================
-# LOCAL / RAILWAY ENTRYPOINT
-# =========================================================
 if __name__ == "__main__":
     import uvicorn
 

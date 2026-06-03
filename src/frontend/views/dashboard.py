@@ -12,21 +12,7 @@ from utils.api_client import (
 from utils.camera_processor import HandGestureProcessor
 
 
-# =========================================================
-# WEBRTC / TURN CONFIG
-# =========================================================
 def build_rtc_configuration():
-    """
-    Railway deploy cần STUN/TURN để WebRTC hoạt động ổn định.
-
-    Set trên Railway frontend service:
-        METERED_TURN_USERNAME=...
-        METERED_TURN_CREDENTIAL=...
-
-    Có thể dùng thêm:
-        METERED_TURN_PASSWORD=...
-    nếu bạn quen đặt tên là password.
-    """
     username = os.getenv("METERED_TURN_USERNAME", "").strip()
     credential = (
         os.getenv("METERED_TURN_CREDENTIAL", "").strip()
@@ -98,10 +84,10 @@ def init_dashboard_state():
     if "last_gesture_command" not in st.session_state:
         st.session_state.last_gesture_command = None
 
+    if "token" not in st.session_state:
+        st.session_state.token = None
 
-# =========================================================
-# MAIN DASHBOARD
-# =========================================================
+
 def render_main_dashboard():
     init_dashboard_state()
 
@@ -153,34 +139,20 @@ def render_main_dashboard():
             st.code(get_backend_base_url())
 
             if os.getenv("METERED_TURN_USERNAME") and (
-                os.getenv("METERED_TURN_CREDENTIAL") or os.getenv("METERED_TURN_PASSWORD")
+                os.getenv("METERED_TURN_CREDENTIAL")
+                or os.getenv("METERED_TURN_PASSWORD")
             ):
                 st.success("TURN credentials: OK")
             else:
                 st.warning("TURN credentials: chưa set env")
 
-    if not token:
-        st.warning(
-            "Chưa có token đăng nhập trong session_state. "
-            "Hãy đăng nhập/guest login trước khi upload hoặc chat."
-        )
-
-    # =====================================================
-    # PAGE: CHAT / DOCUMENT QA
-    # =====================================================
     if st.session_state.current_page == "chat":
         render_chat_page(token)
 
-    # =====================================================
-    # PAGE: CAMERA
-    # =====================================================
     elif st.session_state.current_page == "camera":
         render_camera_page()
 
 
-# =========================================================
-# CHAT PAGE
-# =========================================================
 def render_chat_page(token):
     if not st.session_state.session_id:
         st.header("Hệ thống Trợ lý Thông minh")
@@ -192,10 +164,6 @@ def render_chat_page(token):
         )
 
         if uploaded_file:
-            if not token:
-                st.error("Bạn cần đăng nhập trước khi upload tài liệu.")
-                return
-
             with st.spinner("AI đang đọc tri thức..."):
                 result = upload_file(uploaded_file, token)
 
@@ -250,10 +218,6 @@ def render_chat_page(token):
         q = user_input or pending_question
         st.session_state.pending_question = None
 
-        if not token:
-            st.error("Bạn cần đăng nhập trước khi chat.")
-            return
-
         st.session_state.messages.append(
             {
                 "role": "user",
@@ -290,22 +254,17 @@ def render_chat_page(token):
         st.rerun()
 
 
-# =========================================================
-# CAMERA PAGE
-# =========================================================
 def render_camera_page():
     st.header("📷 Điều khiển AI bằng Cử chỉ")
 
     col_cam, col_info = st.columns([1.5, 1], gap="medium")
 
     with col_cam:
-        rtc_configuration = build_rtc_configuration()
-
         webrtc_ctx = webrtc_streamer(
             key="gesture-camera",
             mode=WebRtcMode.SENDRECV,
             video_processor_factory=HandGestureProcessor,
-            rtc_configuration=rtc_configuration,
+            rtc_configuration=build_rtc_configuration(),
             media_stream_constraints={
                 "video": {
                     "width": {"ideal": 320},
@@ -328,7 +287,6 @@ def render_camera_page():
         if webrtc_ctx.state.playing:
             st.success("Camera đang chạy. Hãy giơ 1–3 ngón tay và giữ 2 giây.")
 
-            # Rerun nhẹ để main thread đọc command từ WebRTC thread.
             st_autorefresh(interval=1500, key="cam_refresh")
 
             processor = webrtc_ctx.video_processor

@@ -3,15 +3,6 @@ import requests
 from typing import Any, Dict, List, Optional
 
 
-# =========================================================
-# BACKEND URL CONFIG
-# =========================================================
-# Railway nên set:
-# BACKEND_URL=https://your-backend-service.up.railway.app
-#
-# Không cần tự thêm /api/v1 trong Railway env.
-# File này sẽ tự nối /api/v1 để tránh sai endpoint.
-# Local backend của bạn đang chạy port 8080 trong main.py.
 BACKEND_HOST = os.getenv("BACKEND_URL", "http://127.0.0.1:8080").rstrip("/")
 
 if BACKEND_HOST.endswith("/api/v1"):
@@ -26,21 +17,10 @@ def _auth_headers(token: Optional[str] = None) -> Dict[str, str]:
     return {}
 
 
-def _safe_json(response: requests.Response) -> Dict[str, Any]:
-    try:
-        return response.json()
-    except Exception:
-        return {
-            "status": "error",
-            "message": response.text,
-        }
-
-
 # =========================================================
-# 1. AUTH
+# AUTH - DEMO SAFE
 # =========================================================
-def register_user(username: str) -> Optional[Dict[str, Any]]:
-    """Đăng ký user mới."""
+def register_user(username: str, *args, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         response = requests.post(
             f"{BASE_URL}/auth/register",
@@ -54,8 +34,7 @@ def register_user(username: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def login_user(username: str) -> Optional[Dict[str, Any]]:
-    """Đăng nhập user."""
+def login_user(username: str, *args, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         response = requests.post(
             f"{BASE_URL}/auth/login",
@@ -70,15 +49,9 @@ def login_user(username: str) -> Optional[Dict[str, Any]]:
 
 
 # =========================================================
-# 2. DOCUMENT UPLOAD
+# DOCUMENT UPLOAD
 # =========================================================
-def upload_file(uploaded_file, token: str) -> Optional[Dict[str, Any]]:
-    """
-    Upload file từ Streamlit file_uploader lên backend.
-
-    Backend thật:
-        POST /api/v1/documents/upload
-    """
+def upload_file(uploaded_file, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
     if uploaded_file is None:
         return None
 
@@ -106,11 +79,7 @@ def upload_file(uploaded_file, token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def upload_document(token: str, file_path: str) -> Optional[Dict[str, Any]]:
-    """
-    Upload file từ đường dẫn local.
-    Giữ lại để tương thích với code cũ nếu còn nơi nào gọi upload_document().
-    """
+def upload_document(token: Optional[str], file_path: str) -> Optional[Dict[str, Any]]:
     try:
         with open(file_path, "rb") as f:
             files = {
@@ -140,25 +109,13 @@ def upload_document(token: str, file_path: str) -> Optional[Dict[str, Any]]:
 
 
 # =========================================================
-# 3. CHAT / RAG
+# CHAT
 # =========================================================
 def send_chat_message(
     message: str,
     session_id: int,
-    token: str,
+    token: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Gửi câu hỏi tới RAG backend.
-
-    Backend thật:
-        POST /api/v1/documents/chat
-
-    Payload backend yêu cầu:
-        {
-            "session_id": int,
-            "query": str
-        }
-    """
     try:
         payload = {
             "session_id": int(session_id),
@@ -184,34 +141,22 @@ def send_chat_message(
 
 
 def chat_with_model(
-    token: str,
+    token: Optional[str],
     user_message: str,
     chat_history: Optional[List[Dict[str, str]]] = None,
     session_id: Optional[int] = None,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Wrapper giữ tương thích với code cũ.
-
-    Nếu code cũ gọi chat_with_model mà không truyền session_id
-    thì backend hiện tại không thể xử lý vì document_api.py yêu cầu session_id.
-    """
     if session_id is None:
-        print("[API Chat Error] Missing session_id for chat_with_model().")
+        print("[API Chat Error] Missing session_id.")
         return None
 
     return send_chat_message(user_message, session_id, token)
 
 
 # =========================================================
-# 4. CHAT SESSIONS
+# SESSIONS
 # =========================================================
-def get_chat_sessions(token: str) -> Optional[List[Dict[str, Any]]]:
-    """
-    Lấy danh sách phiên chat cũ.
-
-    Backend thật:
-        GET /api/v1/documents/sessions
-    """
+def get_chat_sessions(token: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
     try:
         response = requests.get(
             f"{BASE_URL}/documents/sessions",
@@ -229,14 +174,8 @@ def get_chat_sessions(token: str) -> Optional[List[Dict[str, Any]]]:
 
 def get_session_messages(
     session_id: int,
-    token: str,
+    token: Optional[str] = None,
 ) -> Optional[List[Dict[str, Any]]]:
-    """
-    Lấy tin nhắn của một session.
-
-    Backend thật:
-        GET /api/v1/documents/sessions/{session_id}/messages
-    """
     try:
         response = requests.get(
             f"{BASE_URL}/documents/sessions/{int(session_id)}/messages",
@@ -252,50 +191,25 @@ def get_session_messages(
         return None
 
 
-def get_documents(token: str) -> Optional[List[Dict[str, Any]]]:
-    """
-    Alias tương thích code cũ.
-    Hiện backend không có GET /documents, nên map sang sessions.
-    """
+def get_documents(token: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
     return get_chat_sessions(token)
 
 
-# =========================================================
-# 5. SUGGESTED QUESTIONS
-# =========================================================
 def get_questions_from_model(
-    token: str,
+    token: Optional[str],
     document_id: str,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Backend hiện tại KHÔNG có endpoint:
-        GET /api/v1/documents/{document_id}/questions
-
-    Suggested questions được trả về trực tiếp sau upload.
-    Giữ hàm này để tránh crash nếu code cũ còn import.
-    """
-    print(
-        "[API Warning] get_questions_from_model() is deprecated. "
-        "Suggested questions are returned by upload_file()."
-    )
+    print("[API Warning] Suggested questions are returned by upload_file().")
     return None
 
 
 # =========================================================
-# 6. OPTIONAL GESTURE API
+# OPTIONAL GESTURE API
 # =========================================================
 def send_gesture_command(
     gesture_id: int,
     token: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    """
-    API gesture hiện tại tồn tại ở:
-        POST /api/v1/gestures/action
-
-    Tuy nhiên flow chính của dashboard KHÔNG cần gọi hàm này.
-    Camera chỉ cần set confirmed_command, dashboard sẽ map sang câu hỏi.
-    Hàm này giữ lại để test Swagger/API nếu cần.
-    """
     try:
         payload = {
             "gesture_id": int(gesture_id),
@@ -316,9 +230,5 @@ def send_gesture_command(
         return None
 
 
-# =========================================================
-# 7. DEBUG HELPER
-# =========================================================
 def get_backend_base_url() -> str:
-    """Dùng để debug xem frontend đang gọi backend nào."""
     return BASE_URL
