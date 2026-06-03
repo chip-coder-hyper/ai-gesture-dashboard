@@ -4,7 +4,8 @@ import traceback
 
 import av
 import cv2
-import mediapipe as mp
+import mediapipe.python.solutions.hands as mp_hands
+import mediapipe.python.solutions.drawing_utils as mp_draw
 
 try:
     from streamlit_webrtc import VideoProcessorBase
@@ -44,8 +45,8 @@ class HandGestureProcessor(VideoProcessorBase):
         if self.hands_detector is not None:
             return
 
-        self.mp_hands = mp.solutions.hands
-        self.mp_draw = mp.solutions.drawing_utils
+        self.mp_hands = mp_hands
+        self.mp_draw = mp_draw
 
         self.hands_detector = self.mp_hands.Hands(
             static_image_mode=False,

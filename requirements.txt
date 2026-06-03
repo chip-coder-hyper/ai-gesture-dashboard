@@ -1,6 +1,6 @@
 # --- Lõi Backend & Cấu hình ---
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 pydantic-settings
 python-multipart
@@ -27,11 +27,12 @@ sentence-transformers
 pypdf
 docx2txt
 
-# --- Frontend & Xử lý Camera ---
+# --- Frontend ---
 streamlit
 streamlit-webrtc
 streamlit-autorefresh
+
+# --- Camera / Video Processing ---
 opencv-python-headless
-opencv-contrib-python-headless
-mediapipe
+mediapipe==0.10.14
 av
