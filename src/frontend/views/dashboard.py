@@ -57,7 +57,7 @@ def build_rtc_configuration():
         return {
             "iceServers": ice_servers,
             "iceTransportPolicy": "relay",
-        }
+}
 
     return {
         "iceServers": ice_servers,
@@ -280,8 +280,8 @@ def render_camera_page():
                 "muted": True,
             },
             sendback_audio=False,
-            async_processing=True,
-            desired_playing_state=True,
+            async_processing=False,
+            # desired_playing_state=True,
         )
 
         if webrtc_ctx.state.playing:
